@@ -35,6 +35,28 @@ fn clamp((tx, ty): (i64, i64), (cx, cy): (i64, i64)) -> (i64, i64) {
     }
 }
 
+#[cfg(feature = "logging")]
+fn log_visited(v: &HashSet<(i64, i64)>) {
+    let min_x = v.iter().map(|p| p.0).min().unwrap();
+    let max_x = v.iter().map(|p| p.0).max().unwrap();
+    let min_y = v.iter().map(|p| p.1).min().unwrap();
+    let max_y = v.iter().map(|p| p.1).max().unwrap();
+    for x in min_x..=max_x {
+        for y in min_y..=max_y {
+            if v.contains(&(x, y)) {
+                if x == 0 && y == 0 {
+                    print!("s");
+                } else {
+                    print!("#");
+                }
+            } else {
+                print!(".");
+            }
+        }
+        println!();
+    }
+}
+
 fn main() {
     let step_re = Reparse::new(r"(^[LRUD]) ([0-9]+)$");
     let path = input_lines()
@@ -76,6 +98,10 @@ fn main() {
                     visited.insert(k_posns[9]);
                 }
             }
+
+            #[cfg(feature = "logging")]
+            log_visited(&visited);
+
             println!("{}", visited.len());
         }
     }
