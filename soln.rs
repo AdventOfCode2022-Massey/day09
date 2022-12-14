@@ -3,7 +3,7 @@
 // for license terms.
 
 //! Advent of Code Day 9.  
-//! Ben and Bart Massey 2022
+//! Bart Massey 2022
 
 use std::collections::HashSet;
 
@@ -19,22 +19,20 @@ fn char_to_dirn(ch: char) -> Dirn {
     }
 }
 
-fn clamp((tx, ty): &mut (i64, i64), (cx, cy): (i64, i64)) {
-    let (ntx, nty) = if (*tx - cx).abs() <= 1 && (*ty - cy).abs() <= 1 {
-        (*tx, *ty)
-    } else if *tx != cx && *ty == cy {
-        ((*tx).clamp(cx - 1, cx + 1), *ty)
-    } else if *tx == cx && *ty != cy {
-        (*tx, (*ty).clamp(cy - 1, cy + 1))
-    } else if (*tx - cx).abs() > 1 {
-        ((*tx).clamp(cx - 1, cx + 1), cy)
-    } else if (*ty - cy).abs() > 1 {
-        (cx, (*ty).clamp(cy - 1, cy + 1))
+fn clamp((tx, ty): (i64, i64), (cx, cy): (i64, i64)) -> (i64, i64) {
+    if (tx - cx).abs() <= 1 && (ty - cy).abs() <= 1 {
+        (tx, ty)
+    } else if tx != cx && ty == cy {
+        (tx.clamp(cx - 1, cx + 1), ty)
+    } else if tx == cx && ty != cy {
+        (tx, ty.clamp(cy - 1, cy + 1))
+    } else if (tx - cx).abs() > 1 {
+        (tx.clamp(cx - 1, cx + 1), cy)
+    } else if (ty - cy).abs() > 1 {
+        (cx, ty.clamp(cy - 1, cy + 1))
     } else {
-        panic!("lost tail: t=({}, {}) c=({}, {})", *tx, *ty, cx, cy);
-    };
-    *tx = ntx;
-    *ty = nty;
+        panic!("lost tail: t=({}, {}) c=({}, {})", tx, ty, cx, cy);
+    }
 }
 
 fn main() {
@@ -46,6 +44,7 @@ fn main() {
             let dist: i64 = matches.get(2);
             (char_to_dirn(dirn), dist)
         });
+
     match get_part() {
         Part1 => {
             let mut visited = HashSet::new();
@@ -56,12 +55,28 @@ fn main() {
                 for _ in 0..dist {
                     h_posn.0 += disp.0;
                     h_posn.1 += disp.1;
-                    clamp(&mut t_posn, h_posn);
+                    t_posn = clamp(t_posn, h_posn);
                     visited.insert(t_posn);
                 }
             }
             println!("{}", visited.len());
         }
-        Part2 => todo!(),
+        Part2 => {
+            let mut visited = HashSet::new();
+            let mut k_posns = [(0, 0); 10];
+            for (dirn, dist) in path {
+                let disp: (i64, i64) = dirn.disp();
+                for _ in 0..dist {
+                    k_posns[0].0 += disp.0;
+                    k_posns[0].1 += disp.1;
+                    for i in 0..9 {
+                        let k = clamp(k_posns[i + 1], k_posns[i]);
+                        k_posns[i + 1] = k;
+                    }
+                    visited.insert(k_posns[9]);
+                }
+            }
+            println!("{}", visited.len());
+        }
     }
 }
